@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+// namespaceで切換え。Flash, FlashInt, FlashIntData
 // bitmapdata.colorTransformはFlashが一番はやく動作する。それ以外は、FlashIntもFlashIntDataも若干速い。
 // が、それほどの差ではない。総合的にみるとFlashがベストかもしれない。colorTransformを使用しないならば、FlashIntData.
 using FlashIntData;
