@@ -7,6 +7,7 @@ Texture2D texture; // unity texture
 BitmapData srcBmp = new BitmapData();
 srcBmp.SetTexture2D(texture);
 
+// fillRect
 srcBmp.fillRect(new Rectangle(0,0,10,10), Color.green);
 
 // MatrixFilter
