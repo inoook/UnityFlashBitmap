@@ -5,118 +5,6 @@ using FlashClass;
 
 namespace FlashIntData
 {
-
-	public class ColorTransform
-	{
-		public float redMultiplier = 1.0f;
-		public float greenMultiplier = 1.0f; 
-		public float blueMultiplier = 1.0f; 
-		public float alphaMultiplier = 1.0f; 
-		public int redOffset = 0;
-		public int greenOffset = 0; 
-		public int blueOffset = 0;
-		public int alphaOffset = 0;
-		
-		public ColorTransform(  float redMultiplier = 1.0f, float greenMultiplier = 1.0f, float blueMultiplier = 1.0f, float alphaMultiplier = 1.0f, 
-								int redOffset = 0, int greenOffset = 0, int blueOffset = 0, int alphaOffset = 0)
-		{
-			this.redMultiplier = redMultiplier;
-			this.greenMultiplier = greenMultiplier; 
-			this.blueMultiplier = blueMultiplier; 
-			this.alphaMultiplier = alphaMultiplier; 
-			this.redOffset = redOffset;
-			this.greenOffset = greenOffset; 
-			this.blueOffset = blueOffset;
-			this.alphaOffset = alphaOffset;
-		}
-	}
-	
-	public class MatrixFilter
-	{
-		//public int[] filter;
-		public float[] filter;
-		
-		public MatrixFilter(float[] filter_)
-		{
-			filter = filter_;
-		}
-	}
-	
-	// http://help.adobe.com/ja_JP/FlashPlatform/reference/actionscript/3/spark/filters/ConvolutionFilter.html
-	public class ColorMatrixFilter : MatrixFilter
-	{
-		public ColorMatrixFilter(float[] filter_) : base(filter_)
-		{
-			filter = filter_;
-		}
-	}
-	
-	// http://rest-term.com/archives/2566/
-	public class ConvolutionFilter
-	{
-		public int[] matrix;
-		public int divisor = 0;
-		public int bias = 0;
-		
-		public ConvolutionFilter (int[] matrix, int divisor, int bias)
-		{
-			this.matrix = matrix;
-			this.divisor = divisor;
-			this.bias = bias;
-		}
-		/*
-		public void apply (BitmapData src, BitmapData dst)
-		{
-			int w = src.width;
-			int h = src.height;
-			float[] srcData = src._data;
-			float[] dstData = dst._data;
-			int len = dstData.Length;
-			float r;
-			float g;
-			float b;
-			int i;
-			int j;
-			int k;
-			int step;
-			int kStep;
-		 
-			for (int y=1; y<h-1; y++) {
-				step = y * w;
-				for (int x=1; x<w-1; x++) {
-					r = 0;
-					g = 0;
-					b = 0;
-					i = (step + x) << 2;
-					k = 0;
-					for (int ky=-1; ky<=1; ky++) {
-						kStep = ky * w;
-						for (int kx=-1; kx<=1; kx++) {
-							j = (kStep << 2) + (kx << 2);
-							r += srcData [i + j] * this.matrix [k];
-							g += srcData [i + j + 1] * this.matrix [k];
-							b += srcData [i + j + 2] * this.matrix [k++];
-						}
-					}
-					dstData [i] = r / this.divisor + this.bias;
-					dstData [i + 1] = g / this.divisor + this.bias;
-					dstData [i + 2] = b / this.divisor + this.bias;
-					dstData [i + 3] = 1.0f;
-				}
-			}
-			for (var l=0; l<len; l++) {
-				var val = dstData [l];
-				dstData [l] = (val < 0) ? 0 : (val > 1) ? 1 : val;
-			}
-		}
-		*/
-	}
-	
-	public class Sprte
-	{
-		public float mouseX = 0;
-		public float mouseY = 0;
-	}
 	
 	public class BitmapData
 	{
@@ -443,7 +331,12 @@ namespace FlashIntData
 				}
 			}
 		}
-		
+
+		public void clear(Color32 color)
+		{
+			fillRect(new Rectangle(0,0,width, height), color);
+		}
+
 		public void unlock()
 		{
 			// updatePixcel (rewrite Texture2D)

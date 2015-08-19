@@ -5,7 +5,7 @@ using FlashClass;
 // namespaceで切換え。動作比較用 内部のデータの持ち方が違うのみ Flash, FlashInt, FlashIntData
 // bitmapdata.colorTransformはFlashが一番はやく動作する。それ以外は、FlashIntもFlashIntDataが若干速い。
 // 、、、が、それほどの差ではない。総合的にみるとFlashがベストかもしれない。colorTransformを使用しないならば、FlashIntData.
-using FlashIntData;
+using Flash;
 
 public class Test : MonoBehaviour {
 
