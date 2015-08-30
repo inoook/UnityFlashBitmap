@@ -1,5 +1,5 @@
 # UnityFlashBitmap
-Unityのtextureをflashのbitmaっぽく使う。
+Unityのtextureをflashのbitmapっぽく使う。
 
 ~~~cs
 Texture2D texture; // unity texture
