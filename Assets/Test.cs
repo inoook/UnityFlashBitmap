@@ -2,10 +2,7 @@ using UnityEngine;
 using System.Collections;
 
 using FlashClass;
-// namespaceで切換え。動作比較用 内部のデータの持ち方が違うのみ Flash, FlashInt, FlashIntData
-// bitmapdata.colorTransformはFlashが一番はやく動作する。それ以外は、FlashIntもFlashIntDataが若干速い。
-// 、、、が、それほどの差ではない。総合的にみるとFlashがベストかもしれない。colorTransformを使用しないならば、FlashIntData.
-using Flash;
+using FlashBytes;
 
 public class Test : MonoBehaviour {
 
@@ -21,8 +18,10 @@ public class Test : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+
 		srcBmp = new BitmapData();
 		srcBmp.SetTexture2D(texture);
+		srcBmp.unlock();
 		
 		distBmp = new BitmapData(srcBmp.width, srcBmp.height, Color.black);
 		
@@ -82,12 +81,15 @@ public class Test : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		/*
-		//distBmp.fastblur(srcBmp, blur);
-		split = Mathf.Clamp(split, 1, 256);
-		distBmp.resolution(srcBmp, 256/split, 256/split);
-		
+		distBmp.fastblur(srcBmp, blur);
 		distBmp.unlock();// apply texture2D
 		*/
+		/*
+		split = Mathf.Clamp(split, 1, 256);
+		distBmp.resolution(srcBmp, 256/split, 256/split);
+		distBmp.unlock();// apply texture2D
+		*/
+
 	}
 	
 	public int split = 1;
@@ -95,7 +97,7 @@ public class Test : MonoBehaviour {
 	
 	void OnGUI()
 	{
-		GUILayout.BeginArea(new Rect(10,10, 600,800));
+		GUILayout.BeginArea(new Rect(10,10, 1100,800));
 		GUILayout.BeginHorizontal();
 		GUILayout.Label(srcBmp.texture);
 		GUILayout.Label(distBmp.texture);
@@ -128,11 +130,14 @@ public class Test : MonoBehaviour {
 			distBmp.unlock();// apply texture2D
 		}
 		if(GUILayout.Button("Apply ColorTransform")){
+//			distBmp.colorTransform(new Rectangle(0, 0, distBmp.width, distBmp.height), new ColorTransform(-1, -1, -1, 1, 255, 255, 255, 0));
+//			distBmp.unlock();// apply texture2D
+
 			srcBmp.colorTransform(new Rectangle(0, 0, distBmp.width, distBmp.height), new ColorTransform(-1, -1, -1, 1, 255, 255, 255, 0));
 			srcBmp.unlock();// apply texture2D
 		}
 		if(GUILayout.Button("Apply Fill")){
-			distBmp.fillRect(new Rectangle(0,0,distBmp.width, distBmp.height), Color.green);
+			distBmp.fillRect(new Rectangle(0,0,distBmp.width/2, distBmp.height/2), Color.green);
 			distBmp.unlock();// apply texture2D
 		}
 		

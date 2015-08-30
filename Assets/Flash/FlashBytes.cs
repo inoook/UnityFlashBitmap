@@ -3,12 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using FlashClass;
 
-namespace FlashIntData
+namespace FlashBytes
 {
 	
 	public class BitmapData
 	{
-		public int[] _data;
+		public byte[] _data;
 		
 		public int width = 0;
 		public int height = 0;
@@ -19,49 +19,68 @@ namespace FlashIntData
 		
 		public BitmapData()
 		{
-			
+
 		}
 		public BitmapData(int width, int height) : this(width, height, Color.black)
 		{
 			
 		}
-		public BitmapData(int width, int height, Color fillColor)
+		public BitmapData(int width, int height, Color32 fillColor) : this()
 		{
-			Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+			// createTexture RGBA32
+			texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+			texture.filterMode = FilterMode.Point;
+			texture.wrapMode = TextureWrapMode.Clamp;
+			texture.anisoLevel = 0;
+
+			int n = width * height;
+
+			_data = new byte[n*4];
+			byte r = fillColor.r;
+			byte g = fillColor.g;
+			byte b = fillColor.b;
+			byte a = fillColor.a;
+			for(int i = 0; i < n; i++){
+				_data[i*4+0] = r;
+				_data[i*4+1] = g;
+				_data[i*4+2] = b;
+				_data[i*4+3] = a;
+			}
+
+			this.width = width;
+			this.height = height;
+			
+			_rect = new Rectangle(0,0,width, height);
+
+			unlock();
+		}
+		
+		#region for unity
+		public void SetTexture2D(Texture2D srcTextrue)
+		{
+			// createTexture RGBA32
+			texture = new Texture2D(srcTextrue.width, srcTextrue.height, TextureFormat.RGBA32, false);
 			texture.filterMode = FilterMode.Point;
 			texture.wrapMode = TextureWrapMode.Clamp;
 			texture.anisoLevel = 0;
 			
-			int n = width * height;
-			Color[] colors = new Color[n];
-			for(int i = 0; i < n; i++){
-				colors[i] = fillColor;
-			}
-			texture.SetPixels(colors);
-			texture.Apply();
-			
-			SetTexture2D(texture);
-		}
-		
-		#region for unity
-		public void SetTexture2D(Texture2D texture_)
-		{
-			texture = texture_;
-			//texture.wrapMode = TextureWrapMode.Clamp;
-			Color32[] colors = texture.GetPixels32(0);
-			_data = new int[colors.Length*4];
+			Color32[] colors = srcTextrue.GetPixels32(0);
+			_data = new byte[colors.Length*4];
 			
 			for(int i = 0; i < colors.Length; i++){
 				Color32 color = colors[i];
-				_data[i*4    ] = color.r;
+				_data[i*4 + 0] = color.r;
 				_data[i*4 + 1] = color.g;
 				_data[i*4 + 2] = color.b;
 				_data[i*4 + 3] = color.a;
 			}
-			width = texture.width;
-			height = texture.height;
+
+			this.width = srcTextrue.width;
+			this.height = srcTextrue.height;
 			
 			_rect = new Rectangle(0,0,width, height);
+
+			unlock();
 		}
 		public Texture2D GetTexture2D()
 		{
@@ -101,19 +120,16 @@ namespace FlashIntData
 		}
 		public Color getPixel(int x, int y)
 		{
-			//return texture.GetPixel(x,y);
-			
 			if(x >= 0 && y >= 0 && x < width && y < height){
 				int w = this.width;
-				//Debug.Log( (x + y*w) * 4);
-				int r = _data[x*4 +y*w*4];
-				int g = _data[x*4 +y*w*4 + 1];
-				int b = _data[x*4 +y*w*4 + 2];
-				int a = _data[x*4 +y*w*4 + 3];
+				byte r = _data[x*4 +y*w*4 + 0];
+				byte g = _data[x*4 +y*w*4 + 1];
+				byte b = _data[x*4 +y*w*4 + 2];
+				byte a = _data[x*4 +y*w*4 + 3];
 				
 				return new Color32((byte)r, (byte)g, (byte)b, (byte)a);
 			}else{
-				return new Color(1,1,1,0);
+				return new Color32(0xff,0xff,0xff,0);
 			}
 		}
 		
@@ -126,14 +142,13 @@ namespace FlashIntData
 			if(x >= 0 && y >= 0 && x < width && y < height){
 				int w = this.width;
 				
-				int r = _data[x*4 +y*w*4];
-				int g = _data[x*4 +y*w*4 + 1];
-				int b = _data[x*4 +y*w*4 + 2];
-				//int a = _data[x*4 +y*w*4 + 3];
+				byte r = _data[x*4 +y*w*4];
+				byte g = _data[x*4 +y*w*4 + 1];
+				byte b = _data[x*4 +y*w*4 + 2];
 				
-				return r + g + b;
+				return ((int)r + (int)g + (int)b);
 			}else{
-				return 1;
+				return 255;
 			}
 		}
 		
@@ -151,26 +166,25 @@ namespace FlashIntData
 			applyFilter(this, rect, pt, ff);
 		}
 		public void applyFilter(BitmapData src, Rectangle rect, Point pt, MatrixFilter ff){
-			int[] srcData = src._data;
+			byte[] srcData = src._data;
 			
 			float[] f = ff.filter;
 			int w = this.width;
 			for(int y = rect.y; y < rect.y + rect.height; y++){
 				for(int x = rect.x; x < rect.x + rect.width; x++){
 					// old
-					int r = srcData[x*4 +y*w*4],
-						  g = srcData[x*4 +y*w*4+1],
-						  b = srcData[x*4 +y*w*4+2],
-						  a = srcData[x*4 +y*w*4+3];
-					this._data[x*4 +y*w*4] = (int)(r*f[0] + g*f[1] + b*f[2] +a*f[3]+f[4]); //Rnew
-					this._data[x*4 +y*w*4+1] = (int)(r*f[5] + g*f[6] + b*f[7] +a*f[8]+f[9]); //Gnew
-					this._data[x*4 +y*w*4+2] = (int)(r*f[10] + g*f[11] + b*f[12] +a*f[13]+f[14]); //Bnew
-					this._data[x*4 +y*w*4+3] = (int)(r*f[15] + g*f[16] + b*f[17] +a*f[18]+f[19]); //Anew
+					int r = (int)srcData[x*4 +y*w*4],
+					g = (int)srcData[x*4 +y*w*4+1],
+					b = (int)srcData[x*4 +y*w*4+2],
+					a = (int)srcData[x*4 +y*w*4+3];
+					this._data[x*4 +y*w*4] = (byte)(r*f[0] + g*f[1] + b*f[2] +a*f[3]+f[4]); //Rnew
+					this._data[x*4 +y*w*4+1] = (byte)(r*f[5] + g*f[6] + b*f[7] +a*f[8]+f[9]); //Gnew
+					this._data[x*4 +y*w*4+2] = (byte)(r*f[10] + g*f[11] + b*f[12] +a*f[13]+f[14]); //Bnew
+					this._data[x*4 +y*w*4+3] = (byte)(r*f[15] + g*f[16] + b*f[17] +a*f[18]+f[19]); //Anew
 				}
 			}
 		}
-		
-		
+
 		public void applyFilter(ConvolutionFilter cf){
 			applyFilter(this, new Rectangle(0, 0, this.width, this.height), null, cf);
 		}
@@ -179,9 +193,8 @@ namespace FlashIntData
 		{
 			BitmapData dst = this;
 			int w = src.width;
-			//int h = src.height;
 			
-			int[] srcData = src._data;
+			byte[] srcData = src._data;
 			int[] tmpData = new int[srcData.Length];
 			
 			int r;
@@ -192,7 +205,7 @@ namespace FlashIntData
 			int k;
 			int step;
 			int kStep;
-		 
+			
 			for (int y = 1 + rect.y; y < rect.y + rect.height - 1; y++) {
 				step = y * w;
 				for (int x = 1 + rect.x; x < rect.x + rect.width - 1; x++) {
@@ -205,40 +218,28 @@ namespace FlashIntData
 						kStep = ky * w;
 						for (int kx = -1; kx <= 1; kx++) {
 							j = (kStep << 2) + (kx << 2);
-							r += srcData [i + j] * cf.matrix [k];
-							g += srcData [i + j + 1] * cf.matrix [k];
-							b += srcData [i + j + 2] * cf.matrix [k++];
+							r += (int)(srcData [i + j + 0]) * cf.matrix [k];
+							g += (int)(srcData [i + j + 1]) * cf.matrix [k];
+							b += (int)(srcData [i + j + 2]) * cf.matrix [k++];
 						}
 					}
 					// new
-					/*
-					this._data [i] = (int)(r / cf.divisor + cf.bias);
-					this._data [i + 1] = (int)(g / cf.divisor + cf.bias);
-					this._data [i + 2] = (int)(b / cf.divisor + cf.bias);
-					this._data [i + 3] = 255;
-					*/
-					tmpData [i] = (int)(r / cf.divisor + cf.bias);
-					tmpData [i + 1] = (int)(g / cf.divisor + cf.bias);
-					tmpData [i + 2] = (int)(b / cf.divisor + cf.bias);
+					tmpData [i + 0] = (r / cf.divisor + cf.bias);
+					tmpData [i + 1] = (g / cf.divisor + cf.bias);
+					tmpData [i + 2] = (b / cf.divisor + cf.bias);
 					tmpData [i + 3] = 255;
-					
 				}
 			}
 			
-			int[] dstData = dst._data;
+			byte[] dstData = dst._data;
 			int len = dstData.Length;
-			/*
-			for (int l=0; l<len; l++) {
-				int val = this._data [l];
-				this._data [l] = (val < 0) ? 0 : (val > 255) ? 255 : val;
-			}
-			*/
+
 			for (int l=0; l<len; l++) {
 				int val = tmpData [l];
-				tmpData [l] = (val < 0) ? 0 : (val > 255) ? 255 : val;
+				// clamp
+				dstData[l] = (byte)( (val < 0) ? 0 : (val > 255) ? 255 : val );
 			}
-			
-			this._data = tmpData;
+//			this._data = tmpData;
 		}
 		
 		
@@ -252,49 +253,22 @@ namespace FlashIntData
 			int greenOffset = colorTransform.greenOffset; 
 			int blueOffset = colorTransform.blueOffset;
 			int alphaOffset = colorTransform.alphaOffset;
-			
+
 			int w = this.width;
+
 			for(int y = rect.y; y < rect.y +rect.height; y++){
 				for(int x = rect.x; x < rect.x + rect.width; x++){
 					int index = x*4 + y*w*4;
 					// old
-					int r = this._data[index  ],
-						  g = this._data[index+1],
-						  b = this._data[index+2],
-						  a = this._data[index+3];
+					int r = this._data[index+0],
+						g = this._data[index+1],
+						b = this._data[index+2],
+						a = this._data[index+3];
 					// new
-					this._data[index  ] = ((int)(r * redMultiplier) + redOffset); //Rnew
-					this._data[index+1] = ((int)(g * greenMultiplier) + greenOffset); //Gnew
-					this._data[index+2] = ((int)(b * blueMultiplier) + blueOffset); //Bnew
-					this._data[index+3] = ((int)(a * alphaMultiplier) + alphaOffset); //Anew
-				}
-			}
-		}
-		public void colorTransform__(Rectangle rect, ColorTransform colorTransform)
-		{
-			int redMultiplier = (int)(colorTransform.redMultiplier*255);
-			int greenMultiplier = (int)(colorTransform.greenMultiplier*255); 
-			int blueMultiplier = (int)(colorTransform.blueMultiplier*255); 
-			int alphaMultiplier = (int)(colorTransform.alphaMultiplier*255); 
-			int redOffset = colorTransform.redOffset;
-			int greenOffset = colorTransform.greenOffset; 
-			int blueOffset = colorTransform.blueOffset;
-			int alphaOffset = colorTransform.alphaOffset;
-			
-			int w = this.width;
-			for(int y = rect.y; y < rect.y +rect.height; y++){
-				for(int x = rect.x; x < rect.x + rect.width; x++){
-					int index = x*4 + y*w*4;
-					// old
-					int r = this._data[index  ],
-						  g = this._data[index+1],
-						  b = this._data[index+2],
-						  a = this._data[index+3];
-					// new
-					this._data[index  ] = (r * redMultiplier/255 + redOffset); //Rnew
-					this._data[index+1] = (g * greenMultiplier/255 + greenOffset); //Gnew
-					this._data[index+2] = (b * blueMultiplier/255 + blueOffset); //Bnew
-					this._data[index+3] = (a * alphaMultiplier/255 + alphaOffset); //Anew
+					this._data[index+0] = (byte)((int)(r * redMultiplier) + redOffset); //Rnew
+					this._data[index+1] = (byte)((int)(g * greenMultiplier) + greenOffset); //Gnew
+					this._data[index+2] = (byte)((int)(b * blueMultiplier) + blueOffset); //Bnew
+					this._data[index+3] = (byte)((int)(a * alphaMultiplier) + alphaOffset); //Anew
 				}
 			}
 		}
@@ -311,10 +285,10 @@ namespace FlashIntData
 		
 		public void fillRect(Rectangle rect, Color32 color)
 		{
-			int r = color.r,
-				  g = color.g,
-				  b = color.b,
-				  a = color.a;
+			byte r = color.r,
+			g = color.g,
+			b = color.b,
+			a = color.a;
 			
 			int w = this.width;
 			if(rect.x >= 0 && rect.y >= 0 && (rect.x + rect.width <= this.width) && (rect.y + rect.height <= this.height)){
@@ -331,27 +305,17 @@ namespace FlashIntData
 				}
 			}
 		}
-
+		
 		public void clear(Color32 color)
 		{
 			fillRect(new Rectangle(0,0,width, height), color);
 		}
-
+		
 		public void unlock()
 		{
 			// updatePixcel (rewrite Texture2D)
-			int num = ((width)*(height));
-			
-			Color32[] colors = new Color32[num];
-			for(int i = 0; i < num; i++){
-				byte r = (byte)(_data[i * 4]);
-				byte g = (byte)(_data[i * 4 + 1]);
-				byte b = (byte)(_data[i * 4 + 2]);
-				byte a = (byte)(_data[i * 4 + 3]);
-				
-				colors[i] = new Color32(r, g, b, a);
-			}
-			texture.SetPixels32(colors);
+
+			texture.LoadRawTextureData(_data);
 			texture.Apply(false, false);
 		}
 		
@@ -384,56 +348,55 @@ namespace FlashIntData
 		public void resolution(BitmapData src, int m, int n) {
 			
 			int u = src.width / m; // 1ブロックあたりの水平方向画素数
-		    int v = src.height / n; // 1ブロックあたりの垂直方向画素数
+			int v = src.height / n; // 1ブロックあたりの垂直方向画素数
 			
 			int n_u = src.width % m;
 			int n_v = src.height % n;
-			//Debug.Log(src.width + " / "+src.height + " // "+u + " / "+v +  " // "+ n_u + " / "+n_v);
-		    //BitmapData d = new BitmapData(src.width, src.height);
+			//BitmapData d = new BitmapData(src.width, src.height);
 			BitmapData dst = this;
-		    for (int j = 0; j < n; j++) {
-		        for (int i = 0; i < m; i++) {
-		            Rectangle rect = new Rectangle(i * u, j * v, u, v);
-					Color rgb = average(src, rect);
-		            dst.fillRect(rect, rgb);
-		        }
-		    }
+			for (int j = 0; j < n; j++) {
+				for (int i = 0; i < m; i++) {
+					Rectangle rect = new Rectangle(i * u, j * v, u, v);
+					Color32 rgb = average(src, rect);
+					dst.fillRect(rect, rgb);
+				}
+			}
 			
 			// 余りピクセル
 			Rectangle t_rect;
-			Color t_rgb;
+			Color32 t_rgb;
 			if(n_v > 0){
-		        for (int i = 0; i < m; i++) {
+				for (int i = 0; i < m; i++) {
 					t_rect = new Rectangle(i*u, n*v, u, n_v);
 					t_rgb = average(src, t_rect);
-		            dst.fillRect(t_rect, t_rgb);
-		        }
+					dst.fillRect(t_rect, t_rgb);
+				}
 			}
 			if(n_u > 0){
 				for (int j = 0; j < n; j++) {
 					t_rect = new Rectangle(m*u, j*v, n_u, v);
 					t_rgb = average(src, t_rect);
-		            dst.fillRect(t_rect, t_rgb);
-		        }
+					dst.fillRect(t_rect, t_rgb);
+				}
 			}
 			if(n_v > 0 && n_u > 0){
 				t_rect = new Rectangle((m*u), (n*v), n_u, n_v);
 				t_rgb = average(src, t_rect);
-		        dst.fillRect(t_rect, t_rgb);
+				dst.fillRect(t_rect, t_rgb);
 			}
-		    
+			
 			//this._data = dst._data;
 		}
 		
 		Color32 average(BitmapData bd, Rectangle rect) {
-			int[] data = bd._data;
-		    int r = 0;
-		    int g = 0;
-		    int b = 0;
+			byte[] data = bd._data;
+			int r = 0;
+			int g = 0;
+			int b = 0;
 			int a = 0;
 			int w = this.width;
-		    for (int j = 0; j < rect.height; j++) {
-		        for (int i = 0; i < rect.width; i++) {
+			for (int j = 0; j < rect.height; j++) {
+				for (int i = 0; i < rect.width; i++) {
 					int x = rect.x + i;
 					int y = rect.y + j;
 					int index = x*4 +y*w*4;
@@ -443,14 +406,13 @@ namespace FlashIntData
 						b += data[x*4 +y*w*4 + 2];
 						a += data[x*4 +y*w*4 + 3];
 					}
-		        }
-		    }
+				}
+			}
 			
-		    float n = rect.width * rect.height;
+			float n = rect.width * rect.height;
 			return new Color32((byte)(r/n), (byte)(g/n), (byte)(b/n), (byte)(a/n));
 		}
-		
-		// fast blur
+
 		public void fastblur (BitmapData img, int radius)
 		{
 			if (radius < 1) {
@@ -468,44 +430,46 @@ namespace FlashIntData
 			int rsum, gsum, bsum, x, y, i, p, p1, p2, yp, yi, yw;
 			int[] vmin = new int[Mathf.Max (w, h)];
 			int[] vmax = new int[Mathf.Max (w, h)];
-			//int[] pix = img.pixelsInt;
-			int[] pix = img.GetPixelsInt();
+
+			byte[] data = img._data;
+			
 			int[] dv = new int[256 * div];
 			for (i=0; i<256*div; i++) {
 				dv [i] = (i / div);
 			}
-		
+			
 			yw = yi = 0;
-		
+			
 			for (y=0; y<h; y++) {
 				rsum = gsum = bsum = 0;
 				for (i=-radius; i<=radius; i++) {
-					p = pix [yi + Mathf.Min (wm, Mathf.Max (i, 0))];
-					rsum += (p & 0xff0000) >> 16;
-					gsum += (p & 0x00ff00) >> 8;
-					bsum += p & 0x0000ff;
+					int index = yi + Mathf.Min (wm, Mathf.Max (i, 0));
+//					p = pix [index];
+					rsum += (int)(data[index*4+0]);
+					gsum += (int)(data[index*4+1]);
+					bsum += (int)(data[index*4+2]);
 				}
 				for (x=0; x<w; x++) {
 					
 					r [yi] = dv [rsum];
 					g [yi] = dv [gsum];
 					b [yi] = dv [bsum];
-		
+					
 					if (y == 0) {
 						vmin [x] = Mathf.Min (x + radius + 1, wm);
 						vmax [x] = Mathf.Max (x - radius, 0);
 					}
-					p1 = pix [yw + vmin [x]];
-					p2 = pix [yw + vmax [x]];
-		
-					rsum += ((p1 & 0xff0000) - (p2 & 0xff0000)) >> 16;
-					gsum += ((p1 & 0x00ff00) - (p2 & 0x00ff00)) >> 8;
-					bsum += (p1 & 0x0000ff) - (p2 & 0x0000ff);
+					int index1 = (yw + vmin [x])*4;
+					int index2 = (yw + vmax [x])*4;
+
+					rsum += (int)(data[index1+0]) - (int)(data[index2+0]);
+					gsum += (int)(data[index1+1]) - (int)(data[index2+1]);
+					bsum += (int)(data[index1+2]) - (int)(data[index2+2]);
+
 					yi++;
 				}
 				yw += w;
 			}
-		
 			for (x=0; x<w; x++) {
 				rsum = gsum = bsum = 0;
 				yp = -radius * w;
@@ -517,34 +481,37 @@ namespace FlashIntData
 					yp += w;
 				}
 				yi = x;
+
 				for (y=0; y<h; y++) {
-					pix [yi] = (int)( (uint)0xff000000 | (uint)(dv [rsum] << 16) | (uint)(dv [gsum] << 8) | (uint)(dv [bsum]) );
-					//pix[yi] = (int)(0xff0000 * Random.value);
+					_data [yi*4+0] = (byte)((int)dv [rsum]);
+					_data [yi*4+1] = (byte)((int)dv [gsum]);
+					_data [yi*4+2] = (byte)((int)dv [bsum]);
+					_data [yi*4+3] = 0xff;
+
 					if (x == 0) {
 						vmin [y] = Mathf.Min (y + radius + 1, hm) * w;
 						vmax [y] = Mathf.Max (y - radius, 0) * w;
 					}
 					p1 = x + vmin [y];
 					p2 = x + vmax [y];
-		
+					
 					rsum += r [p1] - r [p2];
 					gsum += g [p1] - g [p2];
 					bsum += b [p1] - b [p2];
-		
+					
 					yi += w;
 				}
 			}
-			
-			this.SetPixelsIntToData(pix);
+
 		}
 		
 		// pixelInt
 		int[] GetPixelsInt()
 		{
 			int[] pixelsInt = new int[_data.Length / 4];
-			float r,g,b,a;
+			int r,g,b,a;
 			for(int i = 0; i < pixelsInt.Length; i++){
-				r = _data[i*4];
+				r = _data[i*4 + 0];
 				g = _data[i*4 + 1];
 				b = _data[i*4 + 2];
 				a = _data[i*4 + 3];
@@ -554,16 +521,16 @@ namespace FlashIntData
 		}
 		void SetPixelsIntToData(int[] pixelsInt)
 		{
-			_data = new int[pixelsInt.Length * 4];
+			_data = new byte[pixelsInt.Length * 4];
 			for(int i = 0; i < pixelsInt.Length; i++){
 				int c = pixelsInt[i];
-			 	int r = (c >> 16) & 0xFF;
-	            int g = (c >> 8) & 0xFF;
-	            int b = c & 0xFF;
+				byte r = (byte)((c >> 16) & 0xFF);
+				byte g = (byte)((c >> 8) & 0xFF);
+				byte b = (byte)(c & 0xFF);
 				_data[i*4] = r;
 				_data[i*4 + 1] = g;
 				_data[i*4 + 2] = b;
-				_data[i*4 + 3] = 255;
+				_data[i*4 + 3] = 0xff;
 			}
 		}
 		
