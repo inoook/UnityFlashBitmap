@@ -2,8 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 
+using System;
+using System.Runtime.InteropServices;
+
 namespace FlashClass
 {
+	public enum BitmapDataChannel
+	{
+		ALPHA = 1, RED = 1 << 1, GREEN = 1 << 2, BLUE = 1 << 3, ALL = ALPHA | RED | GREEN | BLUE
+	}
+
 	public class Point
 	{
 		public float x = 0;
@@ -282,6 +290,32 @@ namespace FlashClass
 				bytes[i*4+2] = b;
 				bytes[i*4+3] = a;
 			}
+			return bytes;
+		}
+
+		// http://stackoverflow.com/questions/21512259/fast-copy-of-color32-array-to-byte-array
+		public static byte[] Color32ArrayToByteArray(Color32[] colors)
+		{
+			if (colors == null || colors.Length == 0)
+				return null;
+			
+			int lengthOfColor32 = Marshal.SizeOf(typeof(Color32));
+			int length = lengthOfColor32 * colors.Length;
+			byte[] bytes = new byte[length];
+			
+			GCHandle handle = default(GCHandle);
+			try
+			{
+				handle = GCHandle.Alloc(colors, GCHandleType.Pinned);
+				IntPtr ptr = handle.AddrOfPinnedObject();
+				Marshal.Copy(ptr, bytes, 0, length);
+			}
+			finally
+			{
+				if (handle != default(GCHandle))
+					handle.Free();
+			}
+			
 			return bytes;
 		}
 		#endregion

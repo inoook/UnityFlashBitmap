@@ -15,13 +15,15 @@ public class Test : MonoBehaviour {
 	private MatrixFilter grayScaleFilter;
 
 	private ColorMatrixFilter filter;
+
+	public Texture2D fillTexture;
+	public Vector2 pos = Vector2.zero;
 	
 	// Use this for initialization
 	void Start () {
-
 		srcBmp = new BitmapData();
 		srcBmp.SetTexture2D(texture);
-		srcBmp.unlock();
+		srcBmp.Unlock();
 		
 		distBmp = new BitmapData(srcBmp.width, srcBmp.height, Color.black);
 		
@@ -89,7 +91,12 @@ public class Test : MonoBehaviour {
 		distBmp.resolution(srcBmp, 256/split, 256/split);
 		distBmp.unlock();// apply texture2D
 		*/
-
+		/*
+//		distBmp.fillRectTexture((int)pos.x, (int)pos.y, fillTexture);
+		distBmp.fillRect(new Rectangle(0, 0, distBmp.width, distBmp.height), Color.black);
+		distBmp.fillRect(new Rectangle((int)pos.x, (int)pos.y, distBmp.width/2, distBmp.height/2), Color.green);
+		distBmp.unlock();// apply texture2D
+		*/
 	}
 	
 	public int split = 1;
@@ -107,40 +114,45 @@ public class Test : MonoBehaviour {
 			convolutionFilter.apply(srcBmp, distBmp);
 			distBmp.unlock();// apply texture2D
 			*/
-			distBmp.applyFilter(srcBmp, new Rectangle(0, 0, srcBmp.width, srcBmp.height), new Point(0, 0), convolutionFilter);
-			distBmp.unlock();// apply texture2D
+			distBmp.ApplyFilter(srcBmp, new Rectangle(0, 0, srcBmp.width, srcBmp.height), new Point(0, 0), convolutionFilter);
+			distBmp.Unlock();// apply texture2D
 		}
 		if(GUILayout.Button("Apply MatrixFilter")){
 //			Debug.Log("Apply MatrixFilter");
-			distBmp.applyFilter(srcBmp, new Rectangle(0, 0, srcBmp.width, srcBmp.height), null, grayScaleFilter);
-			distBmp.unlock();// apply texture2D
+			distBmp.ApplyFilter(srcBmp, new Rectangle(0, 0, srcBmp.width, srcBmp.height), null, grayScaleFilter);
+			distBmp.Unlock();// apply texture2D
 		}
 		if(GUILayout.Button("Apply threshold")){
 			Color c = Color.black;
 			c.a = 0;
-			distBmp.threshold(srcBmp, new Rectangle(0, 0, distBmp.width, distBmp.height), 0.5f, c, Color.white);
-			distBmp.unlock();// apply texture2D
+			distBmp.Threshold(srcBmp, new Rectangle(0, 0, distBmp.width, distBmp.height), 0.5f, c, Color.white);
+			distBmp.Unlock();// apply texture2D
 		}
 		if(GUILayout.Button("Apply resolution")){
-			distBmp.resolution(srcBmp, 256/split, 256/split);
-			distBmp.unlock();// apply texture2D
+			distBmp.ChangeResolution(srcBmp, 256/split, 256/split);
+			distBmp.Unlock();// apply texture2D
 		}
 		if(GUILayout.Button("Apply FastBlur")){
-			distBmp.fastblur(srcBmp, blur);
-			distBmp.unlock();// apply texture2D
+			distBmp.Fastblur(srcBmp, blur);
+			distBmp.Unlock();// apply texture2D
 		}
 		if(GUILayout.Button("Apply ColorTransform")){
-//			distBmp.colorTransform(new Rectangle(0, 0, distBmp.width, distBmp.height), new ColorTransform(-1, -1, -1, 1, 255, 255, 255, 0));
-//			distBmp.unlock();// apply texture2D
+//			distBmp.ColorTransform(new Rectangle(0, 0, distBmp.width, distBmp.height), new ColorTransform(-1, -1, -1, 1, 255, 255, 255, 0));
+//			distBmp.Unlock();// apply texture2D
 
-			srcBmp.colorTransform(new Rectangle(0, 0, distBmp.width, distBmp.height), new ColorTransform(-1, -1, -1, 1, 255, 255, 255, 0));
-			srcBmp.unlock();// apply texture2D
+			srcBmp.ColorTransform(new Rectangle(0, 0, distBmp.width, distBmp.height), new ColorTransform(-1, -1, -1, 1, 255, 255, 255, 0));
+			srcBmp.Unlock();// apply texture2D
 		}
 		if(GUILayout.Button("Apply Fill")){
-			distBmp.fillRect(new Rectangle(0,0,distBmp.width/2, distBmp.height/2), Color.green);
-			distBmp.unlock();// apply texture2D
+			distBmp.FillRect(new Rectangle(0,0,distBmp.width, distBmp.height), Color.green);
+			distBmp.Unlock();// apply texture2D
 		}
-		
+		if(GUILayout.Button("Apply Fill textureBytes")){
+//			distBmp.FillRectTexture(new Rectangle(0,0,distBmp.width/2, distBmp.height/2), srcBmp._data, srcBmp.width, distBmp.width/2, distBmp.height/2);
+//			distBmp.FillRectTexture(-100, -100, fillTexture, BitmapDataChannel.ALPHA);
+			distBmp.FillRectTexture(-100, -100, fillTexture);
+			distBmp.Unlock();// apply texture2D
+		}
 		GUILayout.EndArea();
 	}
 }

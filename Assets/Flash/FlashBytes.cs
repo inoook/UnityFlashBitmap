@@ -5,7 +5,6 @@ using FlashClass;
 
 namespace FlashBytes
 {
-	
 	public class BitmapData
 	{
 		public byte[] _data;
@@ -52,7 +51,7 @@ namespace FlashBytes
 			
 			_rect = new Rectangle(0,0,width, height);
 
-			unlock();
+			Unlock();
 		}
 		
 		#region for unity
@@ -65,22 +64,23 @@ namespace FlashBytes
 			texture.anisoLevel = 0;
 			
 			Color32[] colors = srcTextrue.GetPixels32(0);
-			_data = new byte[colors.Length*4];
-			
-			for(int i = 0; i < colors.Length; i++){
-				Color32 color = colors[i];
-				_data[i*4 + 0] = color.r;
-				_data[i*4 + 1] = color.g;
-				_data[i*4 + 2] = color.b;
-				_data[i*4 + 3] = color.a;
-			}
+//			_data = new byte[colors.Length*4];
+//			
+//			for(int i = 0; i < colors.Length; i++){
+//				Color32 color = colors[i];
+//				_data[i*4 + 0] = color.r;
+//				_data[i*4 + 1] = color.g;
+//				_data[i*4 + 2] = color.b;
+//				_data[i*4 + 3] = color.a;
+//			}
+			_data = Utils.Color32ArrayToByteArray(colors);
 
 			this.width = srcTextrue.width;
 			this.height = srcTextrue.height;
 			
 			_rect = new Rectangle(0,0,width, height);
 
-			unlock();
+			Unlock();
 		}
 		public Texture2D GetTexture2D()
 		{
@@ -89,36 +89,35 @@ namespace FlashBytes
 		
 		public Texture2D GetTexture2D_2()
 		{
-			unlock();
+			Unlock();
 			return texture;
 		}
 		#endregion
 		
-		public BitmapData clone()
+		public BitmapData Clone()
 		{
-			/*
 			BitmapData bmd = new BitmapData();
-			bmd._data = new float[this._data.Length];
+			bmd._data = new byte[this._data.Length];
 			for(int i = 0; i < bmd._data.Length; i++){
 				bmd._data[i] = this._data[i];
 			}
 			bmd.width = this.width;
 			bmd.height = this.height;
-			
-			bmd.texture = this.texture;
-			
+
 			//bmd.texture.wrapMode = TextureWrapMode.Clamp;
-			
+
+			Unlock();
+
 			return bmd;
-			*/
-			return this;
+
+//			return this;
 		}
 		
-		public Color getPixel(float x, float y)
+		public Color GetPixel(float x, float y)
 		{
-			return getPixel((int)x, (int)y);
+			return GetPixel((int)x, (int)y);
 		}
-		public Color getPixel(int x, int y)
+		public Color GetPixel(int x, int y)
 		{
 			if(x >= 0 && y >= 0 && x < width && y < height){
 				int w = this.width;
@@ -133,11 +132,11 @@ namespace FlashBytes
 			}
 		}
 		
-		public int getPixelSums(float x, float y)
+		public int GetPixelSums(float x, float y)
 		{
-			return getPixelSums((int)x, (int)y);
+			return GetPixelSums((int)x, (int)y);
 		}
-		public int getPixelSums(int x, int y)
+		public int GetPixelSums(int x, int y)
 		{
 			if(x >= 0 && y >= 0 && x < width && y < height){
 				int w = this.width;
@@ -152,20 +151,20 @@ namespace FlashBytes
 			}
 		}
 		
-		public void dispose()
+		public void Dispose()
 		{
 			_data = null;
 		}
 		
 		// http://livedocs.adobe.com/flash/9.0_jp/ActionScriptLangRefV3/flash/filters/ColorMatrixFilter.html#ColorMatrixFilter()
-		public void applyFilter(MatrixFilter ff){
-			applyFilter(this, new Rectangle(0, 0, this.width, this.height), null, ff);
+		public void ApplyFilter(MatrixFilter ff){
+			ApplyFilter(this, new Rectangle(0, 0, this.width, this.height), null, ff);
 		}
 		
-		public void applyFilter(Rectangle rect, Point pt, MatrixFilter ff){
-			applyFilter(this, rect, pt, ff);
+		public void ApplyFilter(Rectangle rect, Point pt, MatrixFilter ff){
+			ApplyFilter(this, rect, pt, ff);
 		}
-		public void applyFilter(BitmapData src, Rectangle rect, Point pt, MatrixFilter ff){
+		public void ApplyFilter(BitmapData src, Rectangle rect, Point pt, MatrixFilter ff){
 			byte[] srcData = src._data;
 			
 			float[] f = ff.filter;
@@ -185,11 +184,11 @@ namespace FlashBytes
 			}
 		}
 
-		public void applyFilter(ConvolutionFilter cf){
-			applyFilter(this, new Rectangle(0, 0, this.width, this.height), null, cf);
+		public void ApplyFilter(ConvolutionFilter cf){
+			ApplyFilter(this, new Rectangle(0, 0, this.width, this.height), null, cf);
 		}
 		// // http://rest-term.com/archives/2566/
-		public void applyFilter(BitmapData src, Rectangle rect, Point pt, ConvolutionFilter cf)
+		public void ApplyFilter(BitmapData src, Rectangle rect, Point pt, ConvolutionFilter cf)
 		{
 			BitmapData dst = this;
 			int w = src.width;
@@ -243,7 +242,7 @@ namespace FlashBytes
 		}
 		
 		
-		public void colorTransform(Rectangle rect, ColorTransform colorTransform)
+		public void ColorTransform(Rectangle rect, ColorTransform colorTransform)
 		{
 			float redMultiplier = colorTransform.redMultiplier;
 			float greenMultiplier = colorTransform.greenMultiplier; 
@@ -283,12 +282,27 @@ namespace FlashBytes
 			get{ return _rect; }	
 		}
 		
-		public void fillRect(Rectangle rect, Color32 color)
+		public void FillRect(Rectangle rect, Color32 color)
 		{
 			byte r = color.r,
 			g = color.g,
 			b = color.b,
 			a = color.a;
+
+			if(rect.x + rect.width > this.width){
+				rect.width = this.width - rect.x;
+			}
+			if(rect.y + rect.height > this.height){
+				rect.height = this.height - rect.y;
+			}
+			if(rect.x < 0){
+				rect.width = rect.width + rect.x;
+				rect.x = 0;
+			}
+			if(rect.y < 0){
+				rect.height = rect.height + rect.y;
+				rect.y = 0;
+			}
 			
 			int w = this.width;
 			if(rect.x >= 0 && rect.y >= 0 && (rect.x + rect.width <= this.width) && (rect.y + rect.height <= this.height)){
@@ -296,8 +310,8 @@ namespace FlashBytes
 					for(int x = rect.x; x < rect.x + rect.width; x++){
 						
 						// new
-						int index = x*4 +y*w*4;
-						this._data[index] = r; //Rnew
+						int index = (y * w + x) * 4;
+						this._data[index+0] = r; //Rnew
 						this._data[index+1] = g; //Gnew
 						this._data[index+2] = b; //Bnew
 						this._data[index+3] = a; //Anew
@@ -305,22 +319,88 @@ namespace FlashBytes
 				}
 			}
 		}
-		
-		public void clear(Color32 color)
+
+		public void FillRectTexture(Rectangle rect, byte[] textureBytes, int fillTextureWidth, int textureX, int textureY, BitmapDataChannel channels = BitmapDataChannel.ALL)
 		{
-			fillRect(new Rectangle(0,0,width, height), color);
+			if(rect.x + rect.width > this.width){
+				rect.width = this.width - rect.x;
+			}
+			if(rect.y + rect.height > this.height){
+				rect.height = this.height - rect.y;
+			}
+			if(rect.x < 0){
+				rect.width = rect.width + rect.x;
+				textureX = textureX - rect.x;
+				rect.x = 0;
+			}
+			if(rect.y < 0){
+				rect.height = rect.height + rect.y;
+				textureY = textureY - rect.y;
+				rect.y = 0;
+			}
+
+			int w = this.width;
+			if(rect.x >= 0 && rect.y >= 0 && (rect.x + rect.width <= this.width) && (rect.y + rect.height <= this.height)){
+				for(int y = 0; y < rect.height; y++){
+					for(int x = 0; x < rect.width; x++){
+						int txIndex = (((y+textureY) * fillTextureWidth + (x+textureX))) * 4;
+						byte r = textureBytes[txIndex + 0];
+						byte g = textureBytes[txIndex + 1];
+						byte b = textureBytes[txIndex + 2];
+						byte a = textureBytes[txIndex + 3];
+						
+						// new
+						int index = ((y+rect.y) * w + (x+rect.x)) * 4;
+						if((channels & BitmapDataChannel.RED) != 0)
+							this._data[index+0] = r; //Rnew
+						if((channels & BitmapDataChannel.GREEN) != 0)
+							this._data[index+1] = g; //Gnew
+						if((channels & BitmapDataChannel.BLUE) != 0)
+							this._data[index+2] = b; //Bnew
+						if((channels & BitmapDataChannel.ALPHA) != 0)
+							this._data[index+3] = a; //Anew
+					}
+				}
+			}
+		}
+
+		public void FillRectTexture(int x, int y, Texture2D fillTexture, BitmapDataChannel channels = BitmapDataChannel.ALL)
+		{
+			byte[] textureBytes = GetTextureBytes(fillTexture);
+			Rectangle rect = new Rectangle(x, y, fillTexture.width, fillTexture.height);
+			FillRectTexture(rect, textureBytes, fillTexture.width, 0, 0, channels);
+		}
+
+		public void FillRectTexture(Rectangle rect, Texture2D fillTexture, BitmapDataChannel channels = BitmapDataChannel.ALL)
+		{
+			byte[] textureBytes = GetTextureBytes(fillTexture);
+			FillRectTexture(rect, textureBytes, fillTexture.width, 0, 0, channels);
+		}
+
+		private byte[] GetTextureBytes(Texture2D texture)
+		{
+			if( texture.format == TextureFormat.RGBA32 ){
+				return texture.GetRawTextureData();
+			}else{
+				Color32[] colors = texture.GetPixels32(0);
+				return Utils.Color32ArrayToByteArray(colors);
+			}
 		}
 		
-		public void unlock()
+		public void Clear(Color32 color)
+		{
+			FillRect(new Rectangle(0,0,width, height), color);
+		}
+		
+		public void Unlock()
 		{
 			// updatePixcel (rewrite Texture2D)
-
 			texture.LoadRawTextureData(_data);
 			texture.Apply(false, false);
 		}
 		
 		// http://d.hatena.ne.jp/flashrod/20061015
-		public void threshold(BitmapData sourceBitmapData, Rectangle sourceRect, float threshold, Color32 color, Color32 mask)
+		public void Threshold(BitmapData sourceBitmapData, Rectangle sourceRect, float threshold, Color32 color, Color32 mask)
 		{
 			threshold *= 255;
 			
@@ -329,7 +409,7 @@ namespace FlashBytes
 			//float[] data = sourceBitmapData._data;
 			for(int y = rect.y; y < rect.y +rect.height; y++){
 				for(int x = rect.x; x < rect.x + rect.width; x++){
-					float sum = sourceBitmapData.getPixelSums(x, y) / 3.0f;
+					float sum = sourceBitmapData.GetPixelSums(x, y) / 3.0f;
 					if (sum <= threshold) {
 						c = color;
 					}else{
@@ -345,7 +425,7 @@ namespace FlashBytes
 		
 		// extra 
 		// http://d.hatena.ne.jp/flashrod/20081109
-		public void resolution(BitmapData src, int m, int n) {
+		public void ChangeResolution(BitmapData src, int m, int n) {
 			
 			int u = src.width / m; // 1ブロックあたりの水平方向画素数
 			int v = src.height / n; // 1ブロックあたりの垂直方向画素数
@@ -357,8 +437,8 @@ namespace FlashBytes
 			for (int j = 0; j < n; j++) {
 				for (int i = 0; i < m; i++) {
 					Rectangle rect = new Rectangle(i * u, j * v, u, v);
-					Color32 rgb = average(src, rect);
-					dst.fillRect(rect, rgb);
+					Color32 rgb = Average(src, rect);
+					dst.FillRect(rect, rgb);
 				}
 			}
 			
@@ -368,27 +448,27 @@ namespace FlashBytes
 			if(n_v > 0){
 				for (int i = 0; i < m; i++) {
 					t_rect = new Rectangle(i*u, n*v, u, n_v);
-					t_rgb = average(src, t_rect);
-					dst.fillRect(t_rect, t_rgb);
+					t_rgb = Average(src, t_rect);
+					dst.FillRect(t_rect, t_rgb);
 				}
 			}
 			if(n_u > 0){
 				for (int j = 0; j < n; j++) {
 					t_rect = new Rectangle(m*u, j*v, n_u, v);
-					t_rgb = average(src, t_rect);
-					dst.fillRect(t_rect, t_rgb);
+					t_rgb = Average(src, t_rect);
+					dst.FillRect(t_rect, t_rgb);
 				}
 			}
 			if(n_v > 0 && n_u > 0){
 				t_rect = new Rectangle((m*u), (n*v), n_u, n_v);
-				t_rgb = average(src, t_rect);
-				dst.fillRect(t_rect, t_rgb);
+				t_rgb = Average(src, t_rect);
+				dst.FillRect(t_rect, t_rgb);
 			}
 			
 			//this._data = dst._data;
 		}
 		
-		Color32 average(BitmapData bd, Rectangle rect) {
+		Color32 Average(BitmapData bd, Rectangle rect) {
 			byte[] data = bd._data;
 			int r = 0;
 			int g = 0;
@@ -413,7 +493,7 @@ namespace FlashBytes
 			return new Color32((byte)(r/n), (byte)(g/n), (byte)(b/n), (byte)(a/n));
 		}
 
-		public void fastblur (BitmapData img, int radius)
+		public void Fastblur (BitmapData img, int radius)
 		{
 			if (radius < 1) {
 				return;
@@ -502,7 +582,6 @@ namespace FlashBytes
 					yi += w;
 				}
 			}
-
 		}
 		
 		// pixelInt
@@ -519,6 +598,7 @@ namespace FlashBytes
 			}
 			return pixelsInt;
 		}
+
 		void SetPixelsIntToData(int[] pixelsInt)
 		{
 			_data = new byte[pixelsInt.Length * 4];
